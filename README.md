@@ -1,6 +1,9 @@
 # Social-Network-Analytics
-This analytics is to analyze Amazon’s co-purchase network, i.e., which products are purchased together on Amazon, and predict the sales rank using key factors impacting the salesrank (Lower salesrank means higher sales) and by poission regression.
+This analytics is to analyze Amazon’s co-purchase network, i.e., which products are purchased together on Amazon, and predict the sales rank using key factors impacting the salesrank (Lower salesrank means higher sales).
 
 # Package
-iGraph
+iGraph;
 sqldf
+
+# Prediction Model
+Poisson Regression
