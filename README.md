@@ -3,7 +3,8 @@ This analytics is to analyze Amazon’s co-purchase network, i.e., which product
 
 # Package
 iGraph;
-sqldf
+sqldf;
+dplyr
 
 # Prediction Model
 Poisson Regression
