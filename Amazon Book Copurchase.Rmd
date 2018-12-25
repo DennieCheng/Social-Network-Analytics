@@ -12,7 +12,7 @@ library(igraph)
 ```
 Import data
 
-```{graph}
+```{r}
 products <- read.csv("/Users/NINI/products.csv")
 copurchase <- read.csv("/Users/NINI/copurchase.csv")
 attach(products)
@@ -20,7 +20,7 @@ attach(products)
 
 Only keep record of product whose type is Book, and clean copurchase data to make sure copurchase only has source ids and target ids from the Book product.
 
-```{graph}
+```{r}
 products_book = filter(products, group == "Book" & salesrank <= 150000 & salesrank >= 0)
 copurchase <- sqldf("select copurchase.source, copurchase.target from copurchase, products_book 
                     where copurchase.source in (products_book.id)")
@@ -29,45 +29,45 @@ copurchase <- sqldf("select copurchase.source, copurchase.target from copurchase
                     where copurchase.target in (products_book.id)")
 ```
 Convert numeric of Source id and Target id into character for drawing graph later
-```{graph}
+```{r}
 copurchase$Source <- as.character(copurchase$Source)
 copurchase$Target <- as.character(copurchase$Target)
 attach(copurchase)
 ```
 Convert copurchase into graph object as 'net'
-```{graph}
+```{r}
 net <- graph_from_data_frame(copurchase, directed = TRUE)
 ```
 Output in-degree(target2product), out-degree(product2target), and all-degree
-```{graph}
+```{r}
 in_degree <- degree(net, mode = "in")
 out_degree <- degree(net, mode = "out")
 all_degree <- degree(net, mode = "all")
 ```
 Select out the product id with the highest all-degree and get the product id = '33' and '4429'
-```{graph}
+```{r}
 V(net)$name[degree(net)==max(all_degree)]
 ```
 We choose '33' to find out all books'ids connecting with '33' directly and indirectly
-```{graph}
+```{r}
 subcomponent33 <- subcomponent(net, "33", mode = "all")
 ```
 Convert subcomponent into object as graph
-```{graph}
+```{r}
 g <- induced_subgraph(net, subcomponent33)
 ```
 Draw out graph#
 Vertex's degree is used to set vertex's size.
-```{graph}
+```{r}
 V(g)$degree <- degree(g, mode = "all")
 ```
 Get the first shortest path between two books' ids who have longest distance.
-```{graph}
+```{r}
 diam <- get_diameter(g, directed = TRUE)
 as.vector(diam)
 ```
 Set color and size for nodes and edges for graph.
-```{graph}
+```{r}
 vcol <- rep("gray", vcount(g))
 vcol[diam] <- "gold"
 ecol <- rep("gray80", ecount(g))
@@ -86,7 +86,7 @@ From the sources and related targets, it is clear to find out that the consumers
 
 
 Degree distribution of subcomponent33, from distribution and edge density, we learned that the most books are in the low degree, meaning that most book buyers are looking for particular books and not targeting to further extent.
-```{graph}
+```{r}
 deg.dist <- degree_distribution(g, cumulative=T, mode="all")
 deg <- degree(g, mode = "all")
 plot( x=0:max(deg), y=1-deg.dist, pch=19, cex=1.2, col="orange", 
@@ -94,16 +94,16 @@ plot( x=0:max(deg), y=1-deg.dist, pch=19, cex=1.2, col="orange",
 edge_density(g, loops=F)
 ```
 Degree centralization: the difference between centralization 0.02794058 and theoretical max centralization 1630818 is huge. It means most of book ids with few connection with other books, but only few books has centralized the connections.
-```{graph}
+```{r}
 centr_degree(g, mode="all", normalized=T)
 ```
 Closeness: according to closeness function result, the max closeness value is 0.0001612383, which is tiny. It means low efficiency when one node to reach other nodes.
-```{graph}
+```{r}
 closeness(g, mode="all", weights=NA) 
 centr_clo(g, mode="all", normalized=T) 
 ```
 Betweenness: most of nodes' betweenness are '0'. It means most of books are purchased solely based on the consumers' needs and not related to others.
-```{graph}
+```{r}
 betwn <- betweenness(g, directed=T, weights=NA)
 boxplot(betwn)
 edge_betweenness(g, directed=T, weights=NA)
@@ -111,7 +111,7 @@ centr_betw(g, directed=T, normalized=T)
 ```
 Hubs and authorities
 According to hub_score's and authority_score's distribution, we found the whole network has loose connection with each other and only very few nodes as hubs to connect to others and authorities as target, like "195144", "33".
-```{graph}
+```{r}
 hubs <- hub_score(g, weights=NA)
 boxplot(hubs)
 auths <- authority_score(g, weights=NA)
@@ -135,17 +135,17 @@ plot(g,
 ```
 
 create variables of neighbors
-```{graph}
+```{r}
 products_book_focal <- products_book
 ```
 Create table products_book_focal_mean1 to record the means of rating, review counts, sales rank of every focal product.
-```{graph}
+```{r}
 products_book_focal_mean <- NULL
 products_book_focal_mean1 <- NULL
 ```
 Figure out all neighbors of each focal product
 Define Global variable: vertexid
-```{graph}
+```{r}
 vertexid <- as_ids(V(g))
 for(i in 1:904){
 
@@ -163,13 +163,13 @@ for(i in 1:904){
 products_book_focal_mean1 <- as.data.frame(products_book_focal_mean1)
 
 ```
-Queation 8
+
 All product info for subcomponent33
-```{graph}
+```{r}
 product_33 <- merge(products_book_focal, products_book_focal_mean1, by.x = "id", by.y = "id", all.y=TRUE)
 ```
 Include Indegree, outdegree, closeness, betweenness into the products info of subcomponent 33.
-```{graph}
+```{r}
 for(i in 1:904){
   
   in_degree33 <- degree(g, vertexid[i], mode="in")
@@ -184,7 +184,7 @@ for(i in 1:904){
 }
 ```
 Include hub score and authority score
-```{graph}
+```{r}
 hub_auth_temp <- NULL
 
 hub_auth_temp$id <- as.data.frame(as.numeric(vertexid))
@@ -194,26 +194,26 @@ hub_auth_temp <- as.data.frame(hub_auth_temp)
 colnames(hub_auth_temp) <- c("id", "hub_score", "auth_score")
 ```
 Merge temporary table containing hub score and authority score into product33 table
-```{graph}
+```{r}
 product_33 <- merge(product_33, hub_auth_temp, by.x = "id", by.y = "id", all.x =TRUE)
 product_33$nghb_mn_rating <- as.numeric(product_33$nghb_mn_rating)
 product_33$nghb_mn_salesrank <- as.numeric(product_33$nghb_mn_salesrank)
 product_33$nghb_mn_review_cnt <- as.numeric(product_33$nghb_mn_review_cnt)
 ```
 Now product_33 contains all network info of books of subcomponent "33"
-```{graph}
+```{r}
 summary(product_33)
 attach(product_33)
 ```
 Following will do poission regression to check which factor impact salesrank most.
-```{graph}
+```{r}
 fit.salesrank <- glm(salesrank ~ review_cnt + downloads + rating + nghb_mn_rating + nghb_mn_salesrank + nghb_mn_review_cnt + in_degree + out_degree + closeness + betweenness + hub_score + auth_score, 
                      data = product_33, family = poisson())
 summary(fit.salesrank)
 
 ```
 Interprate coefficients:
-```{graph}
+```{r}
 c1 <-coef(fit.salesrank)
 c1 <- as.data.frame(c1)
 colnames(c1) <- c("coef_value")
@@ -239,14 +239,14 @@ Due to we are focusing on corelationsihp of books not an isolated book, so "inte
 12.Product's authority score increased by 0.1 (more inlinks), 2.087% increase on salesrank  on average and less sales.
 
 Remove products with no "point-to" neighbors to do poisson regression, and get the same result as above.
-```{graph}
+```{r}
 product_33_haveneigh <- product_33[complete.cases(product_33), ]
 fit.salesrank_neigh <- glm(salesrank ~ review_cnt + downloads + rating + nghb_mn_rating + nghb_mn_salesrank + nghb_mn_review_cnt + in_degree + out_degree + closeness + betweenness + hub_score + auth_score, 
                      data = product_33_haveneigh, family = poisson())
 summary(fit.salesrank_neigh)
 ```
 Predict using mean value of every variables. The predicted result of sales rank is 65799.
-```{graph}
+```{r}
 predict(fit.salesrank, data.frame(review_cnt=mean(review_cnt), downloads=mean(downloads), 
                                   rating=mean(rating), nghb_mn_rating = mean(nghb_mn_rating), 
                                   nghb_mn_salesrank =mean(nghb_mn_salesrank),
@@ -257,7 +257,7 @@ predict(fit.salesrank, data.frame(review_cnt=mean(review_cnt), downloads=mean(do
         type="response")
 ```
 Two times neighbor average rating and keep others constant, predict the salesrank. The predicted result of sales rank is 62880.
-```{graph}
+```{r}
 predict(fit.salesrank, data.frame(review_cnt=mean(review_cnt), downloads=mean(downloads), 
                                   rating=mean(rating), nghb_mn_rating = mean(nghb_mn_rating)*2, 
                                   nghb_mn_salesrank =mean(nghb_mn_salesrank),
